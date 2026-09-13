@@ -1,0 +1,47 @@
+$SPV_Settings	Settings
+$SPV_Save	Save
+$SPV_Revert	Revert
+$SPV_Defaults	Defaults
+$SPV_StatusSaved	Saved to SkyParkourVibrationAddon.ini
+$SPV_StatusSaveFailed	Could not write SkyParkourVibrationAddon.ini
+$SPV_StatusReverted	Reloaded from the INI
+$SPV_StatusDefaults	Defaults applied, not saved yet
+$SPV_Unsaved	Changes already work in game. Save them to keep them after loading a save or restarting.
+$SPV_WarnHooks	XInput hooks are not installed, see SkyParkourVibrationAddon.log.
+$SPV_WarnGameVibration	Vibration is turned off in the game's Controls settings, so every effect is muted.
+$SPV_General	General
+$SPV_Enabled	Enabled
+$SPV_MasterStrength	Master strength
+$SPV_FollowGame	Follow the game's Vibration setting
+$SPV_DebugLog	Debug log
+$SPV_HeavyMotor	Heavy motor
+$SPV_LightMotor	Light motor
+$SPV_Duration	Duration (s)
+$SPV_FadeOut	Fade-out (s)
+$SPV_Test	Test
+$SPV_PushOff	Push-off
+$SPV_PushOffInfo	Feet push off at the start of a climb, step or vault.
+$SPV_Grab	Grab
+$SPV_GrabInfo	Hands catch the ledge, or plant on the obstacle when vaulting.
+$SPV_GrabScaleInfo	Grab strength by ledge type:
+$SPV_ScaleLedgeGrab	Mid-air ledge grab
+$SPV_ScaleVault	Vault
+$SPV_ScaleLow	Low ledge
+$SPV_ScaleMedium	Medium ledge
+$SPV_ScaleHigh	High ledge
+$SPV_ScaleHighest	Highest ledge
+$SPV_Land	Step landing
+$SPV_LandInfo	Feet land after stepping up.
+$SPV_Fail	Failed climb
+$SPV_FailInfo	Not enough stamina: the climb fails and you hit the wall.
+$SPV_Roll	Landing roll
+$SPV_RollInfo	Rolling out of a fall.
+$SPV_Slide	Slide
+$SPV_SlideInfo	Continuous vibration while sliding. Test plays one second of it.
+$SPV_SlideLimit	Longest slide (s)
+$SPV_Jump	Jump
+$SPV_JumpInfo	Regular jump: feet push off the ground.
+$SPV_JumpLand	Jump landing
+$SPV_JumpLandInfo	Landing after a regular jump or a fall. The higher the fall, the stronger it is; Test plays full strength.
+$SPV_JumpFullHeight	Fall height for full strength (units, ~70 per meter)
+$SPV_JumpMinStrength	Strength of a hop in place

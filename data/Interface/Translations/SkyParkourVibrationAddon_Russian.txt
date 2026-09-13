@@ -1,0 +1,47 @@
+$SPV_Settings	Настройки
+$SPV_Save	Сохранить
+$SPV_Revert	Вернуть из INI
+$SPV_Defaults	По умолчанию
+$SPV_StatusSaved	Сохранено в SkyParkourVibrationAddon.ini
+$SPV_StatusSaveFailed	Не удалось записать SkyParkourVibrationAddon.ini
+$SPV_StatusReverted	Настройки перечитаны из INI
+$SPV_StatusDefaults	Значения по умолчанию применены, но не сохранены
+$SPV_Unsaved	Изменения уже действуют в игре. Сохраните их, чтобы они не сбросились после загрузки сохранения или перезапуска.
+$SPV_WarnHooks	Перехват XInput не установлен, подробности в SkyParkourVibrationAddon.log.
+$SPV_WarnGameVibration	Вибрация выключена в настройках управления игры, поэтому все эффекты заглушены.
+$SPV_General	Общие
+$SPV_Enabled	Включено
+$SPV_MasterStrength	Общая сила
+$SPV_FollowGame	Учитывать настройку вибрации в игре
+$SPV_DebugLog	Отладочный лог
+$SPV_HeavyMotor	Тяжёлый мотор
+$SPV_LightMotor	Лёгкий мотор
+$SPV_Duration	Длительность (с)
+$SPV_FadeOut	Затухание (с)
+$SPV_Test	Проверить
+$SPV_PushOff	Толчок
+$SPV_PushOffInfo	Толчок ногами в начале лазания, шага или прыжка через препятствие.
+$SPV_Grab	Хват
+$SPV_GrabInfo	Руки хватаются за уступ или упираются в препятствие при прыжке через него.
+$SPV_GrabScaleInfo	Сила хвата в зависимости от уступа:
+$SPV_ScaleLedgeGrab	Хват в прыжке
+$SPV_ScaleVault	Прыжок через препятствие
+$SPV_ScaleLow	Низкий уступ
+$SPV_ScaleMedium	Средний уступ
+$SPV_ScaleHigh	Высокий уступ
+$SPV_ScaleHighest	Самый высокий уступ
+$SPV_Land	Приземление после шага
+$SPV_LandInfo	Приземление после шага наверх.
+$SPV_Fail	Неудачное лазание
+$SPV_FailInfo	Не хватило выносливости: лазание срывается, и вы ударяетесь о стену.
+$SPV_Roll	Кувырок при приземлении
+$SPV_RollInfo	Кувырок после падения.
+$SPV_Slide	Скольжение
+$SPV_SlideInfo	Непрерывная вибрация во время скольжения. Проверка воспроизводит одну секунду.
+$SPV_SlideLimit	Предел для скольжения (с)
+$SPV_Jump	Прыжок
+$SPV_JumpInfo	Обычный прыжок: толчок ногами от земли.
+$SPV_JumpLand	Приземление после прыжка
+$SPV_JumpLandInfo	Приземление после обычного прыжка или падения. Чем выше падение, тем сильнее; проверка воспроизводит полную силу.
+$SPV_JumpFullHeight	Высота падения для полной силы (ед., ~70 на метр)
+$SPV_JumpMinStrength	Сила прыжка на месте

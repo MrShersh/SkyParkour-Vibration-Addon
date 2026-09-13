@@ -1,0 +1,2 @@
+# Skyrim reads translation files only as UTF-16 LE with BOM; git stores them as UTF-8 for readable diffs.
+data/Interface/Translations/*.txt working-tree-encoding=UTF-16LE-BOM eol=crlf
