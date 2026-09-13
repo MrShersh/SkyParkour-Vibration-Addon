@@ -45,29 +45,9 @@ The annotations sit on the exact contact frames of SkyParkour's animations, so t
 - **INI:** `SKSE/Plugins/SkyParkourVibrationAddon.ini`. File edits apply on the next save load. `bDebugLog = true` writes every
   SkyParkour animation event and fired effect to `Documents/My Games/Skyrim Special Edition/SKSE/SkyParkourVibrationAddon.log`.
 
-## Translations
-
-The settings page follows the game language through `Interface/Translations/SkyParkourVibrationAddon_<LANGUAGE>.txt`
-(English and Russian included). To add a language, copy the English file, rename it after the game's `sLanguage`
-(e.g. `SkyParkourVibrationAddon_German.txt`) and translate the text after the tab on each line. The file must be saved as
-UTF-16 LE with BOM; keys missing from it fall back to English.
-
-SKSE Menu Framework draws Cyrillic only with `EnableCyrillic = true` in `SKSE/Plugins/SKSEMenuFramework.ini`
-(Chinese, Japanese, Korean, Thai and Turkish have similar switches). With a Russian game and Cyrillic disabled, the page
-stays in English and says which option to turn on.
-
 ## Building
 
 Visual Studio 2022 with *Desktop development with C++*, and [vcpkg](https://github.com/microsoft/vcpkg).
-
-```powershell
-git submodule update --init --recursive
-$env:VCPKG_ROOT = "C:/path/to/vcpkg"
-cmake --preset vs2022
-cmake --build --preset release
-```
-
-The mod folder is assembled in `dist/` (override with `-DDIST_DIR=...`, e.g. straight into an MO2 `mods` folder).
 
 ## License
 
@@ -75,6 +55,6 @@ GPL-3.0, see [`LICENSE`](LICENSE).
 
 ## Third-party code
 
-- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG) — git submodule, statically linked; GPL-3.0-or-later with the Modding Exception.
-- `extern/SKSEMenuFramework/SKSEMenuFramework.h` — SKSE Menu Framework API header, MIT; provenance in `extern/SKSEMenuFramework/README.md`.
-- spdlog and fmt (through vcpkg) — MIT.
+- [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG).
+- SKSE Menu Framework API header.
+- spdlog and fmt (through vcpkg).
