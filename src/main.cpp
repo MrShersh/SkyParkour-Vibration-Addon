@@ -22,6 +22,7 @@ namespace
 			Haptics::ResetState();
 			Haptics::RegisterSink();
 			Vibration::Reset();
+			Vibration::LogStatus();
 			break;
 		default:
 			break;

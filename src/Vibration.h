@@ -7,6 +7,7 @@ namespace Vibration
 	bool Install();
 	bool IsInstalled();
 	bool GameVibrationEnabled();
+	void LogStatus();
 
 	// A preview (Test button in the settings menu) keeps playing while the menu pauses the game or the addon is disabled.
 	void Pulse(float a_heavy, float a_light, float a_duration, bool a_preview = false);

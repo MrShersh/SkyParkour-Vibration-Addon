@@ -48,6 +48,14 @@ namespace Vibration
 		std::atomic_bool  g_installed{ false };
 		std::atomic_bool  g_gameVibrationEnabled{ true };
 
+		// Controller slots as bit masks: answered the game's polling / received the game's own vibration.
+		std::atomic_uint32_t g_connectedUsers{ 0 };
+		std::atomic_uint32_t g_gameUsers{ 0 };
+
+		// Diagnostics for bug reports.
+		std::atomic_uint32_t g_getStateCalls{ 0 };
+		std::atomic_uint32_t g_pollTicks{ 0 };
+
 		std::mutex                            g_lock;
 		std::array<ActivePulse, kMaxPulses>   g_pulses{};
 		std::size_t                           g_pulseCount{ 0 };
@@ -56,6 +64,7 @@ namespace Vibration
 		float                                 g_light{ 0.0f };
 		std::chrono::steady_clock::time_point g_lastAdvance{};
 		std::chrono::steady_clock::time_point g_lastSettingPoll{};
+		int                                   g_loggedGameVibration{ -1 };
 
 		std::array<REX::W32::XINPUT_VIBRATION, kMaxUsers> g_game{};
 		std::array<REX::W32::XINPUT_VIBRATION, kMaxUsers> g_written{};
@@ -74,6 +83,12 @@ namespace Vibration
 				}
 			}
 			return !setting || setting->GetBool();
+		}
+
+		bool GameSeesGamepad()
+		{
+			const auto manager = RE::BSInputDeviceManager::GetSingleton();
+			return manager && manager->IsGamepadConnected();
 		}
 
 		void ClearEffects()
@@ -148,20 +163,25 @@ namespace Vibration
 			return a_lhs.leftMotorSpeed == a_rhs.leftMotorSpeed && a_lhs.rightMotorSpeed == a_rhs.rightMotorSpeed;
 		}
 
-		// Driven by the game's own controller polling: runs every frame on the main thread, menus included.
-		void Tick(std::uint32_t a_user)
+		// Runs once per frame from the engine's gamepad poll, on the main thread, menus included.
+		void Tick()
 		{
-			REX::W32::XINPUT_VIBRATION output;
+			std::array<REX::W32::XINPUT_VIBRATION, kMaxUsers> pending{};
+			std::uint32_t                                     pendingUsers = 0;
 			{
 				std::scoped_lock lock{ g_lock };
 
 				const auto now = std::chrono::steady_clock::now();
 				if (now - g_lastSettingPoll >= kGameSettingPollInterval) {
 					g_lastSettingPoll = now;
-					g_gameVibrationEnabled = ReadGameVibrationSetting();
+					const bool enabled = ReadGameVibrationSetting();
+					g_gameVibrationEnabled = enabled;
+					if (g_loggedGameVibration != static_cast<int>(enabled)) {
+						g_loggedGameVibration = static_cast<int>(enabled);
+						logger::info("In-game Vibration option is {}", enabled ? "on" : "off (effects stay muted while \"Follow the game's Vibration setting\" is enabled)");
+					}
 				}
 
-				// The game may poll several controllers per frame: advance effects once, mix per controller.
 				const auto dt = std::chrono::duration<float>(now - g_lastAdvance).count();
 				if (dt > 0.001f) {
 					g_lastAdvance = now;
@@ -178,20 +198,42 @@ namespace Vibration
 					}
 				}
 
-				output = Mix(a_user);
-				if (output == g_written[a_user]) {
-					return;
+				// When the game's polling bypasses our import hook, the slot is only known once the game vibrates on its own.
+				auto users = g_connectedUsers.load() | g_gameUsers.load();
+				if (users == 0 && GameSeesGamepad()) {
+					users = 1;
 				}
-				g_written[a_user] = output;
+
+				for (std::uint32_t user = 0; user < kMaxUsers; ++user) {
+					if ((users & (1u << user)) == 0) {
+						continue;
+					}
+					const auto output = Mix(user);
+					if (output == g_written[user]) {
+						continue;
+					}
+					g_written[user] = output;
+					pending[user] = output;
+					pendingUsers |= 1u << user;
+				}
 			}
-			g_setState(a_user, &output);
+
+			for (std::uint32_t user = 0; user < kMaxUsers; ++user) {
+				if ((pendingUsers & (1u << user)) != 0) {
+					g_setState(user, &pending[user]);
+				}
+			}
 		}
 
 		std::uint32_t GetStateHook(std::uint32_t a_user, REX::W32::XINPUT_STATE* a_state)
 		{
 			const auto result = g_getState(a_user, a_state);
+			g_getStateCalls.fetch_add(1, std::memory_order_relaxed);
 			if (result == kErrorSuccess && a_user < kMaxUsers) {
-				Tick(a_user);
+				const auto bit = 1u << a_user;
+				if ((g_connectedUsers.fetch_or(bit) & bit) == 0) {
+					logger::info("Game polls XInput controller {}: connected", a_user);
+				}
 			}
 			return result;
 		}
@@ -202,6 +244,8 @@ namespace Vibration
 				return g_setState(a_user, a_vibration);
 			}
 
+			g_gameUsers.fetch_or(1u << a_user);
+
 			REX::W32::XINPUT_VIBRATION output;
 			{
 				std::scoped_lock lock{ g_lock };
@@ -210,6 +254,40 @@ namespace Vibration
 				g_written[a_user] = output;
 			}
 			return g_setState(a_user, &output);
+		}
+
+		// Ticking from the engine's own gamepad poll instead of XInputGetState: another plugin (KiENBExtender in a
+		// Nolvus report) can re-point the game's XInputGetState import so the game's polling never reaches our hook.
+		struct GamepadPollHook
+		{
+			static void Thunk(RE::BSPCGamepadDeviceHandler* a_this, float a_timeDelta)
+			{
+				original(a_this, a_timeDelta);
+				if (g_pollTicks.fetch_add(1, std::memory_order_relaxed) == 0) {
+					logger::info("Gamepad update loop running");
+				}
+				Tick();
+			}
+
+			static inline REL::Relocation<decltype(&Thunk)> original;
+		};
+
+		// Names the DLL a hook lives in, so a bug report shows which plugin redirected XInput before us.
+		std::string ModuleNameOf(std::uintptr_t a_address)
+		{
+			REX::W32::MEMORY_BASIC_INFORMATION info{};
+			if (!REX::W32::VirtualQuery(reinterpret_cast<const void*>(a_address), &info, sizeof(info)) || !info.allocationBase) {
+				return "unknown module";
+			}
+
+			std::array<wchar_t, 260> path{};
+			const auto length = REX::W32::GetModuleFileNameW(reinterpret_cast<REX::W32::HMODULE>(info.allocationBase), path.data(), static_cast<std::uint32_t>(path.size()));
+			if (length == 0) {
+				return "unknown module (not inside a DLL, e.g. a trampoline)";
+			}
+
+			const auto name = std::filesystem::path{ std::wstring_view{ path.data(), length } }.filename().wstring();
+			return SKSE::stl::utf16_to_utf8(name).value_or("unknown module");
 		}
 
 		// SKSE::PatchIAT only matches imports by name, but SkyrimSE.exe imports XInput by ordinal.
@@ -259,7 +337,7 @@ namespace Vibration
 
 			const auto original = *reinterpret_cast<std::uintptr_t*>(slot);
 			if (original != exported) {
-				logger::info("{} is already redirected by another plugin, chaining to it", a_name);
+				logger::info("{} is already redirected by {} (0x{:X}), chaining to it", a_name, ModuleNameOf(original), original);
 			}
 
 			// Publish the original before the slot points at the hook, so the hook never sees it unset.
@@ -279,8 +357,12 @@ namespace Vibration
 			!PatchImport("XInputGetState", kOrdinalGetState, &GetStateHook, g_getState)) {
 			return false;
 		}
+
+		REL::Relocation<std::uintptr_t> vtable{ RE::VTABLE_BSPCGamepadDeviceHandler[0] };
+		GamepadPollHook::original = vtable.write_vfunc(0x2, GamepadPollHook::Thunk);
+
 		g_installed = true;
-		logger::info("XInput hooks installed");
+		logger::info("XInput and gamepad poll hooks installed");
 		return true;
 	}
 
@@ -292,6 +374,27 @@ namespace Vibration
 	bool GameVibrationEnabled()
 	{
 		return g_gameVibrationEnabled;
+	}
+
+	void LogStatus()
+	{
+		const auto polls = g_pollTicks.load();
+		const auto calls = g_getStateCalls.load();
+		const auto connected = g_connectedUsers.load();
+		const auto gameUsers = g_gameUsers.load();
+
+		if (polls == 0) {
+			logger::warn("Gamepad status: the game's gamepad poll has not run - gamepad input may be turned off in the game");
+			return;
+		}
+		if (calls == 0) {
+			logger::info("Gamepad status: {} updates; the game's XInput polling bypasses this plugin (another plugin re-points the import), "
+						 "so the controller slot comes from the game's own vibration (mask 0x{:X}) or defaults to 0",
+				polls, gameUsers);
+			return;
+		}
+		logger::info("Gamepad status: {} updates, {} XInput polls, connected controllers mask 0x{:X}, game vibration mask 0x{:X}",
+			polls, calls, connected, gameUsers);
 	}
 
 	void Pulse(float a_heavy, float a_light, float a_duration, bool a_preview)

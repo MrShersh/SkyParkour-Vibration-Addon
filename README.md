@@ -27,7 +27,8 @@ The annotations sit on the exact contact frames of SkyParkour's animations, so t
   `fMinStrength` for a hop in place up to full strength at `fFullStrengthFallHeight`. Mounted and swimming jumps are ignored.
 - **Output.** `SkyrimSE.exe` imports `xinput1_3.dll` by ordinal; the plugin redirects the game's `XInputSetState` and
   `XInputGetState` imports. The game's own vibration and the addon's effects are mixed per motor (maximum), so neither
-  overrides the other. Effects advance once per frame from the game's controller polling, on the main thread.
+  overrides the other. Effects advance once per frame from the game's own gamepad update
+  (`BSPCGamepadDeviceHandler::Poll`) on the main thread, so plugins that re-point the game's XInput imports can't bypass them.
 - Vibration stops while the game is paused and follows the in-game Vibration option (`bGamePadRumble`).
 
 ## Requirements

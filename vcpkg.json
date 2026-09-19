@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "skyparkour-vibration-addon",
-  "version-semver": "1.0.0",
+  "version-semver": "1.0.2",
   "description": "Gamepad vibration addon for SkyParkour v3",
   "dependencies": [
     "directxmath",
